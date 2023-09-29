@@ -1,15 +1,16 @@
 import './todo.css';
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 
 function Todo (){
     let [bgTheme, setBgTheme] = useState('./icon-moon.svg')
     const [isLightTheme, setIsLightTheme] = useState(true);
     let [list, addList] = useState([]);
-    const [completedList, setCompletedList] = useState([]);
     const [newItem, setNewItems] = useState('');
     const [isCheckActive, setCheckActive] = useState(false);
     const [filter, setFilter] = useState('all'); // Added filter state
     const [itemsRemaining, setItemsRemaining] = useState(0); // Initialize with 0
+    const [itemDragging, setItemDragging] = useState(); //the element that is being dragged
+    const dropInContainer = useRef(); //here we're pretty much doing the same thing s document.queryselector (getting an element)
     /*
     we need to start using useState to access dom elements instead of vanilla js, chatGPT mentions our mistake here:
     Accessing DOM Elements: In React, it's generally not recommended to directly manipulate the DOM using vanilla JavaScript methods like 
@@ -19,12 +20,12 @@ function Todo (){
     of the component with the new theme.
     */
 
+    let todoValue;
+
     const toggleTheme = () => { //function for when we click the image icon
         setIsLightTheme(prevIsLightTheme => !prevIsLightTheme); //basically here, we're making useState change to false
         setBgTheme(isLightTheme ? './icon-sun.svg' : './icon-moon.svg'); //here, were saying if lighttheme is true, then lets use the moon image, else lets use the sun image
     };
-
-    let todoValue;
 
    function addItemToArray(){
     if (newItem.trim() !== ''){//basically, if the value that is stored isnt an empty string/if someone actually typed something
@@ -43,7 +44,7 @@ function Todo (){
    }
    
 
-    // Function to update the count of pending items
+    // Function to update the count of pending items 
     function updateItemsRemaining(updatedList) {
         const pendingItems = updatedList.filter((todo) => !todo.completed).length;
         setItemsRemaining(pendingItems);
@@ -112,13 +113,46 @@ function Todo (){
                         {/*we then push the text into the array in the next div*/ }}}
                         />
                     </div>
-                    <div className='todo-wrapper' >
+
+                    {/* LIST WRAPPER */}
+                    <div 
+                    className='todo-wrapper' 
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        
+                    }}
+                    ref={dropInContainer}
+                    >
+                        {/*
+                        dragstart: Fired when the user starts dragging an element.
+                        drag: Fired continuously as the element is dragged. (during the dragging)
+                        dragover: Fired continuously as a draggable element is over a valid drop target. (we can use this when dragging over elements)
+                        drop: Fired when the user drops a draggable element onto a drop target. (this is  for when we drop it above or below a div)
+                        dragend: Fired when the drag operation is completed (e.g., when the user releases the mouse button). (end)                        
+                         */}
 
                         {/*we use the && operator to g onto the next xentence if first is true*/}{/*giving each thing we map over a unique identifier by giving them different number keys, we prov a unique key prop using the index parameter.*/}
                             {/*we call filter items as it returns a list depending on what the filter is, after we get the respctive filter that we want, we can map through it and create todos based on that list, that will also allow us to get the remaining items that we're looking for*/}
+                            
+                            {/* THE ACTUAL LIST */}
                             {filterItems().map((todo, index) => ( 
-                                <section>
-                                <div className='todo textbox draggable' key={index} draggable='true'>
+                                <section 
+                                className='move-cursor'
+                                >
+                                <div 
+                                className='todo textbox'
+                                key={index}
+                                        id='draggableElement'
+                                        draggable='true'
+                                        onDragStart={(e) => {
+                                        setItemDragging(e.target)//we can remove it when it drops
+                                       itemDragging.classList.add('dragging')
+                                }}
+
+                                    onDragEnd={(e) => {
+                                        dropInContainer.current.appendChild(itemDragging)
+                                    }}
+                                >
                                         {/* <svg xmlns="http://www.w3.org/2000/svg" width="11" height="8" viewBox="0 0 11 8" fill="none">
                                             <path d="M1 4.3041L3.6959 7L9.6959 1" stroke="white" />
                                         </svg> THIS IS THE TICK*/}
@@ -188,16 +222,19 @@ function Todo (){
                             <div 
                             className='pointer'
                             onClick={() => {
-                                list.map((item) => {
-                                    if (item.completed){
-                                        // if we click clear completed we want to remove everything in the array that has completed to be true
+                                let oldList = [...list];
+                                let updatedList = [];
+                                oldList.map(items => {
+                                    if (!items.completed){
+                                        updatedList.push(items)
                                     }
                                 })
+
+                                addList(updatedList);
+
                             }}
                             >Clear Completed</div>
                         </section>
-            
-                        {/*create an empty array for react loops, then everytime we click w on the input, we will have it input those thing into the array*/}
                     </div>
                 </section>
             </section>
