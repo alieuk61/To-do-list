@@ -9,8 +9,11 @@ function Todo (){
     const [isCheckActive, setCheckActive] = useState(false);
     const [filter, setFilter] = useState('all'); // Added filter state
     const [itemsRemaining, setItemsRemaining] = useState(0); // Initialize with 0
-    const [itemDragging, setItemDragging] = useState(); //the element that is being dragged
+    const itemDragging = useRef(null); // Initialize with null //the element that is being dragged, initializing with null
     const dropInContainer = useRef(); //here we're pretty much doing the same thing s document.queryselector (getting an element)
+    // Add state to keep track of the target todo item index
+    const [targetIndex, setTargetIndex] = useState(null);
+    const [draggedIndex, setDraggedIndex] = useState(null);
     /*
     we need to start using useState to access dom elements instead of vanilla js, chatGPT mentions our mistake here:
     Accessing DOM Elements: In React, it's generally not recommended to directly manipulate the DOM using vanilla JavaScript methods like 
@@ -119,7 +122,16 @@ function Todo (){
                     className='todo-wrapper' 
                     onDragOver={(e) => {
                         e.preventDefault();
-                        
+                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        setDraggedIndex(index);
+                        // Get the position of the mouse relative to the container
+                        const mouseY = e.clientY - dropInContainer.current.getBoundingClientRect().top;
+                        console.log([draggedIndex, mouseY, e.clientY, dropInContainer.current.getBoundingClientRect().top])
+                        // Calculate the index of the target todo item
+                        const newIndex = Math.floor(mouseY / 60); // Assuming each todo item is 60px in height
+
+                        // Update the targetIndex state
+                        setTargetIndex(newIndex);
                     }}
                     ref={dropInContainer}
                     >
@@ -138,20 +150,44 @@ function Todo (){
                             {filterItems().map((todo, index) => ( 
                                 <section 
                                 className='move-cursor'
+                                    key={index}
+                                    id='draggableElement'
+                                    draggable='true'
+                                    onDragStart={(e) => {
+                                        itemDragging.current = e.target //changing the itemdragging var to doc.querySelector(the todo thats being clicked)
+                                        itemDragging.current.classList.add('dragging')
+
+                                        
+                                    }}
+                                    onDragEnd={(e) => {
+                                        if (targetIndex !== null && draggedIndex !== null) {
+                                            const updatedList = [...list];
+                                            const draggedItem = updatedList.splice(draggedIndex, 1)[0]; // Remove the dragged item, since splice returns another array of the item that was removed, the array returned only had one element (the removed item), so the index at the end is that item
+
+                                            // Insert the dragged item above or below the target item
+                                            if (targetIndex >= draggedIndex) {
+                                                updatedList.splice(targetIndex, 0, draggedItem);//if the index of the item we're dragging is smaller than the index where we want it to be, put it below
+                                            } else {
+                                                updatedList.splice(targetIndex + 1, 0, draggedItem); //if the index of the item we're dragging is bigger than the index where we want it to be, then put it above the targetedIndex
+                                            }
+
+                                            // Update the list and reset the targetIndex and draggedIndex
+                                            addList(updatedList);
+                                            setTargetIndex(null);
+                                            setDraggedIndex(null);
+
+                                            // Remove the dragging class
+                                            itemDragging.current.classList.remove('dragging');
+                                        }
+                                    }}
+                                
+                                // when dragging we need to see what we're hovering over/closest thing we're next to
+                                // we also need to see if we're above that thing or below it using .clientY
                                 >
                                 <div 
                                 className='todo textbox'
                                 key={index}
-                                        id='draggableElement'
-                                        draggable='true'
-                                        onDragStart={(e) => {
-                                        setItemDragging(e.target)//we can remove it when it drops
-                                       itemDragging.classList.add('dragging')
-                                }}
-
-                                    onDragEnd={(e) => {
-                                        dropInContainer.current.appendChild(itemDragging)
-                                    }}
+                                        
                                 >
                                         {/* <svg xmlns="http://www.w3.org/2000/svg" width="11" height="8" viewBox="0 0 11 8" fill="none">
                                             <path d="M1 4.3041L3.6959 7L9.6959 1" stroke="white" />
