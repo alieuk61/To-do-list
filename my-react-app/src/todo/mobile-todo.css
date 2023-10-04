@@ -1,0 +1,16 @@
+@media screen and (max-width: 375px) {
+    .todo-page{
+        width: 375px;
+        height: 700px;
+    }
+
+    .textbox{
+        width: 327px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
+    .title{
+        width: inherit;
+    }
+}

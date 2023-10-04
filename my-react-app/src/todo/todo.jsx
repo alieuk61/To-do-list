@@ -1,12 +1,12 @@
 import './todo.css';
+import './mobile-todo.css';
 import {useState, useRef} from 'react';
 
 function Todo (){
     let [bgTheme, setBgTheme] = useState('./icon-moon.svg')
     const [isLightTheme, setIsLightTheme] = useState(true);
-    let [list, addList] = useState([]);
+    const [list, addList] = useState([]);
     const [newItem, setNewItems] = useState('');
-    const [isCheckActive, setCheckActive] = useState(false);
     const [filter, setFilter] = useState('all'); // Added filter state
     const [itemsRemaining, setItemsRemaining] = useState(0); // Initialize with 0
     const itemDragging = useRef(null); // Initialize with null //the element that is being dragged, initializing with null
@@ -14,6 +14,8 @@ function Todo (){
     // Add state to keep track of the target todo item index
     const [targetIndex, setTargetIndex] = useState(null);
     const [draggedIndex, setDraggedIndex] = useState(null);
+    const todoListRefs = useRef([]);
+    //1, click a button, access and store the current todoL with an index relative to the button clicked, toggle a classlist to them
     /*
     we need to start using useState to access dom elements instead of vanilla js, chatGPT mentions our mistake here:
     Accessing DOM Elements: In React, it's generally not recommended to directly manipulate the DOM using vanilla JavaScript methods like 
@@ -67,6 +69,19 @@ function Todo (){
         }
     }
 
+    function handleCheckboxClick(index) {
+        const todoElement = todoListRefs.current[index];
+            // You can access and manipulate the todoElement here
+            // For example, toggle a class
+        if (isLightTheme){
+            todoElement.classList.toggle('light-cross')
+        }else{
+            todoElement.classList.toggle('dark-cross')
+        }
+        // Add any other logic you want to perform on the todoElement
+        // based on the checkbox click.
+    }
+
     return(
         <section className={`todo-page ${isLightTheme ? 'light' : 'dark'}`}> 
         {/*basically we use string literals to allow us to have either the light class or dark class, depending on 
@@ -82,11 +97,11 @@ function Todo (){
             </div>
 
                 <section className='list'>
-                    <div className='textbox input'>
+                    <div className={`textbox input ${isLightTheme ? 'white-todo' : 'black-todo'} `}>
                         <svg
                             className='checkbox pointer'
                             xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="11.5" stroke="#393A4B" fill={isLightTheme ? 'white' : 'black'} />
+                            <circle cx="12" cy="12" r="11.5" stroke="#393A4B" fill={isLightTheme ? 'white' : 'black-todo'} />
                             <g opacity="0.01">
                                 <circle cx="12" cy="12" r="12" fill="url(#paint0_linear_0_167)" />
                                 <path d="M8 12.3041L10.6959 15L16.6959 9" stroke="white" />
@@ -101,7 +116,7 @@ function Todo (){
                         <input 
                         type="text"
                         placeholder="Create a new todo.."
-                        className='pointer text'
+                            className={`pointer text ${isLightTheme ? 'white-todo' : 'black-todo'} `}
                         value = {newItem} //we're storing the value that is typed in here
                         onChange={(e) => {//this monitors what is typed
                             setNewItems(todoValue = e.target.value)
@@ -119,14 +134,13 @@ function Todo (){
 
                     {/* LIST WRAPPER */}
                     <div 
-                    className='todo-wrapper' 
+                        className={`todo-wrapper ${isLightTheme ? 'white-todo' : 'black-todo'} `} 
                     onDragOver={(e) => {
                         e.preventDefault();
-                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        const index = parseInt(e.target.getAttribute('data-index'), 10); //getting the index of the thing we're dragging, the 10 means its a decimal number or base 10
                         setDraggedIndex(index);
                         // Get the position of the mouse relative to the container
                         const mouseY = e.clientY - dropInContainer.current.getBoundingClientRect().top;
-                        console.log([draggedIndex, mouseY, e.clientY, dropInContainer.current.getBoundingClientRect().top])
                         // Calculate the index of the target todo item
                         const newIndex = Math.floor(mouseY / 60); // Assuming each todo item is 60px in height
 
@@ -149,7 +163,7 @@ function Todo (){
                             {/* THE ACTUAL LIST */}
                             {filterItems().map((todo, index) => ( 
                                 <section 
-                                className='move-cursor'
+                                    className={`move-cursor `}
                                     key={index}
                                     id='draggableElement'
                                     draggable='true'
@@ -185,9 +199,9 @@ function Todo (){
                                 // we also need to see if we're above that thing or below it using .clientY
                                 >
                                 <div 
-                                className='todo textbox'
+                                className={`todo textbox ${isLightTheme ? 'white-todo' : 'black-todo'} `}
                                 key={index}
-                                        
+                                
                                 >
                                         {/* <svg xmlns="http://www.w3.org/2000/svg" width="11" height="8" viewBox="0 0 11 8" fill="none">
                                             <path d="M1 4.3041L3.6959 7L9.6959 1" stroke="white" />
@@ -196,16 +210,11 @@ function Todo (){
                                             className='checkbox pointer todo-checkbox'
                                             id={index}
                                             onClick={(ev) => {
-                                                ev.target.classList.toggle('checkActive')
-                                                if (ev.target.classList.contains('checkActive')) {
-                                                    setCheckActive(true)
-                                                } else {
-                                                    setCheckActive(false)
-                                                }
-                                                toggleCompletion(index)
+                                            handleCheckboxClick(index)
+                                            toggleCompletion(index)
                                             }}
                                             xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                            <circle cx="12" cy="12" r="11.5" stroke="#393A4B" fill={isLightTheme ? 'white' : 'black'} />
+                                            <circle cx="12" cy="12" r="11.5" stroke="#393A4B" fill={isLightTheme ? 'white' : 'black-todo'} />
                                             <g opacity="0.01">
                                                 <circle cx="12" cy="12" r="12" fill="url(#paint0_linear_0_167)" />
                                                 <path d="M8 12.3041L10.6959 15L16.6959 9" stroke="white" />
@@ -218,8 +227,8 @@ function Todo (){
                                             </defs>
                                         </svg>
                                     
-                                        <div className='msg-and-delete'>
-                                            <p id={index} className={`todoList ${isCheckActive ? 'cross' : ''}`}>{todo.text}</p>
+                                        <div className='msg-and-delete' ref={(element) => (todoListRefs.current[index] = element)} >
+                                            <p id={index} className={`todoList`}>{todo.text}</p>
                                             <img 
                                             id={index}
                                             src="./icon-cross.svg" 
@@ -234,24 +243,24 @@ function Todo (){
                                             />
                                         </div>
                                 </div>
-                                <div className='barrier'></div>
+                                <div className={` ${isLightTheme ? 'barrier' : 'dark-barrier'} `}></div>
                                 </section>
                             ))}
 
-                        <section className='pages'>
+                        <section className={`pages ${isLightTheme ? 'white-todo' : 'black-todo'} `}>
                             <div className='remainingItems'>{itemsRemaining} items left</div>
                             <div
-                                className={`pointer ${filter === 'all' ? 'active' : ''}`}
+                                className={`pointer page ${filter === 'all' ? 'active' : ''}`}
                                 onClick={() => setFilter('all')}>
                                 All
                             </div>
                             <div
-                                className={`pointer ${filter === 'pending' ? 'active' : ''}`}
+                                className={`pointer page ${filter === 'pending' ? 'active' : ''}`}
                                 onClick={() => setFilter('pending')}>
                                 Pending
                             </div>
                             <div
-                                className={`pointer ${filter === 'completed' ? 'active' : ''}`}
+                                className={`pointer page ${filter === 'completed' ? 'active' : ''}`}
                                 onClick={() => setFilter('completed')}>
                                 Completed
                             </div>
@@ -272,6 +281,7 @@ function Todo (){
                             >Clear Completed</div>
                         </section>
                     </div>
+                    <div className={` ${isLightTheme ? 'grid' : 'dark-grid'} `}>Drag and drop to reorder list</div>
                 </section>
             </section>
         </section>
