@@ -14,6 +14,18 @@
     background-repeat: no-repeat;
 }
 
+.mobile-light{
+    background-color: hsl(0, 0%, 98%);
+    background-image: url('./images/bg-mobile-light.jpg');
+    background-repeat: no-repeat;
+}
+
+.mobile-dark{
+    background-color: hsl(0, 0%, 98%);
+    background-image: url('./images/bg-mobile-dark.jpg');
+    background-repeat: no-repeat;
+}
+
 .absolute{
     position: absolute;
 }

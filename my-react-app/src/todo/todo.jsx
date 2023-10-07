@@ -1,6 +1,6 @@
 import './todo.css';
 import './mobile-todo.css';
-import {useState, useRef} from 'react';
+import {useState, useRef, useEffect} from 'react';
 
 function Todo (){
     let [bgTheme, setBgTheme] = useState('./icon-moon.svg')
@@ -15,6 +15,8 @@ function Todo (){
     const [targetIndex, setTargetIndex] = useState(null);
     const [draggedIndex, setDraggedIndex] = useState(null);
     const todoListRefs = useRef([]);
+    const page = useRef();
+    const [className, setClassName] = useState('');
     //1, click a button, access and store the current todoL with an index relative to the button clicked, toggle a classlist to them
     /*
     we need to start using useState to access dom elements instead of vanilla js, chatGPT mentions our mistake here:
@@ -82,8 +84,41 @@ function Todo (){
         // based on the checkbox click.
     }
 
+    useEffect(() => {
+        // Define a function to calculate the class name based on window.innerWidth and isLightTheme
+        const getClassName = () => {
+            if (window.innerWidth <= 375 && isLightTheme) {
+                return 'mobile-light';
+            } else if (window.innerWidth <= 375 && !isLightTheme) {
+                return 'mobile-dark';
+            } else if (window.innerWidth > 375 && isLightTheme) {
+                return 'light';
+            } else {
+                return 'dark';
+            }
+        };
+
+        // Set the initial class name
+        setClassName(getClassName());
+
+        // Listen to window resize events and update the class name when needed
+        const handleResize = () => {
+            setClassName(getClassName());
+        };
+
+        window.addEventListener('resize', handleResize);
+        // Clean up the event listener when the component unmounts
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [isLightTheme]);
+
+
     return(
-        <section className={`todo-page ${isLightTheme ? 'light' : 'dark'}`}> 
+        <section 
+        className={`todo-page ${className}`}
+        ref={page}
+        >  
         {/*basically we use string literals to allow us to have either the light class or dark class, depending on 
          if is lighttheme is true or false*/}
             <section className='heading-sec'>
